@@ -1,7 +1,7 @@
 import Foundation
 
-/// Lectura de `Data/ms_4/pro.data` de DELUX Office Driver: 4 bytes de cabecera y
-/// perfiles de 0x80E4 bytes (offsets tomados de `Mouse.exe`).
+/// Reader for DELUX Office Driver's `Data/ms_4/pro.data`: a 4-byte header and
+/// 0x80E4-byte profiles (offsets taken from `Mouse.exe`).
 public enum WindowsProfileImporter {
     static let header = 4
     static let profileSize = 0x80e4
@@ -18,7 +18,7 @@ public enum WindowsProfileImporter {
             offset += profileSize
             let name = String(decoding: stride(from: 0, to: 64, by: 2).map { UInt16(p[$0]) | UInt16(p[$0 + 1]) << 8 }
                 .prefix { $0 != 0 }, as: UTF16.self)
-            // Los perfiles vacíos tienen todo a cero.
+            // Empty profiles are all zeros.
             guard !name.isEmpty else { continue }
             result.append(parse(p, name: name))
         }
@@ -48,7 +48,7 @@ public enum WindowsProfileImporter {
                     let o = k + 0x440 + e * 4
                     return MacroEvent(key: p[o], pressed: p[o + 1] == 1, delayMs: Int(UInt16(p[o + 2]) | UInt16(p[o + 3]) << 8))
                 }
-                return .macro(Macro(name: "Macro ranura \(slot + 1)", repeatMode: p[k + 0xc],
+                return .macro(Macro(name: "Macro slot \(slot + 1)", repeatMode: p[k + 0xc],
                                     repeatCount: p[k + 0x43c], events: events))
             default:
                 return .function(id)
@@ -71,7 +71,7 @@ public enum WindowsProfileImporter {
     }
 }
 
-/// Perfiles guardados en `~/Library/Application Support/DeluxDriver/profiles.json`.
+/// Profiles saved in `~/Library/Application Support/DeluxDriver/profiles.json`.
 public struct ProfileStore: Codable, Equatable, Sendable {
     public var profiles: [MouseProfile]
     public var selected: Int

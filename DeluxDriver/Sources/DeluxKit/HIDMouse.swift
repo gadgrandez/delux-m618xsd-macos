@@ -2,7 +2,7 @@ import Foundation
 import IOKit
 import IOKit.hid
 
-/// Evento que el mouse envía por el input report 0x03 (colección de página 0x0A).
+/// Event the mouse sends in input report 0x03 (collection on usage page 0x0A).
 public enum MouseEvent: Equatable, Sendable {
     case dpiStageChanged(stage: Int)
     case pollingChanged(raw: Int)
@@ -12,7 +12,7 @@ public enum MouseEvent: Equatable, Sendable {
     case lightModeChanged(raw: Int)
     case other(type: UInt8, value: UInt16)
 
-    /// `report` incluye el report ID en el byte 0: `03 28 TT VV VV`.
+    /// `report` includes the report ID in byte 0: `03 28 TT VV VV`.
     static func parse(_ report: [UInt8]) -> MouseEvent? {
         guard report.count >= 5, report[0] == 0x03, report[1] == Protocol.modelByte else { return nil }
         let type = report[2]
@@ -32,25 +32,25 @@ public enum MouseEvent: Equatable, Sendable {
 }
 
 public enum ConnectionMode: String, Sendable {
-    case wired = "Cable USB"
-    case receiver = "Receptor 2.4G"
+    case wired = "USB cable"
+    case receiver = "2.4G receiver"
     case bluetooth = "Bluetooth"
 }
 
-/// Conexión con el mouse, sea por HID (cable/receptor) o por Bluetooth LE.
+/// Connection to the mouse, either over HID (cable/receiver) or Bluetooth LE.
 public protocol MouseConnection: AnyObject, Sendable {
     var mode: ConnectionMode { get }
-    /// Eventos del mouse (DPI, batería, ACK…).
+    /// Mouse events (DPI, battery, ACK…).
     var onEvent: ((MouseEvent) -> Void)? { get set }
     func startEvents(on runLoop: RunLoop)
     func close()
-    /// Envía un paquete de configuración; devuelve true si el mouse lo confirmó.
+    /// Sends a configuration packet; returns true if the mouse acknowledged it.
     @discardableResult func send(_ packet: [UInt8], label: String) throws -> Bool
 }
 
 public extension MouseConnection {
-    /// Aplica un perfil completo. Bloquea varios segundos: llamar fuera del hilo principal.
-    /// `progress` recibe (paso, índice, total, ¿confirmado?) tras enviar cada paso.
+    /// Applies a full profile. Blocks for several seconds: call it off the main thread.
+    /// `progress` receives (step, index, total, acknowledged?) after each step is sent.
     func apply(_ profile: MouseProfile, progress: ((String, Int, Int, Bool) -> Void)? = nil) throws {
         let errors = profile.validationErrors()
         guard errors.isEmpty else { throw MouseError.invalidProfile(errors) }
@@ -64,8 +64,8 @@ public extension MouseConnection {
     func startEvents() { startEvents(on: .main) }
 }
 
-/// Busca el mouse por cable, Bluetooth y receptor, en ese orden. El receptor puede seguir
-/// enchufado con el mouse en modo Bluetooth, así que Bluetooth va antes si macOS lo ve conectado.
+/// Looks for the mouse over cable, Bluetooth and receiver, in that order. The receiver may stay
+/// plugged in while the mouse is in Bluetooth mode, so Bluetooth goes first if macOS sees it connected.
 public enum MouseFinder {
     public static func connect(includeBluetooth: Bool = true, bluetoothTimeout: TimeInterval = 5) throws -> MouseConnection {
         let hid = try? HIDMouse.find()
@@ -91,28 +91,28 @@ public enum MouseError: Error, CustomStringConvertible {
 
     public var description: String {
         switch self {
-        case .notFound: return "No se encontró el M618XSD (cable 1d57:fa28, receptor 1d57:fa60 ni Bluetooth «BT5.2Mouse»)."
-        case .openFailed(let r): return "No se pudo abrir el dispositivo HID (IOReturn 0x\(String(UInt32(bitPattern: r), radix: 16)))."
-        case .sendFailed(let l, let r): return "Falló el envío de «\(l)» (IOReturn 0x\(String(UInt32(bitPattern: r), radix: 16)))."
-        case .noAck(let l): return "El mouse no confirmó «\(l)» tras 10 intentos."
-        case .invalidProfile(let e): return "Perfil inválido:\n- " + e.joined(separator: "\n- ")
+        case .notFound: return "M618XSD not found (cable 1d57:fa28, receiver 1d57:fa60 or Bluetooth \"BT5.2Mouse\")."
+        case .openFailed(let r): return "Could not open the HID device (IOReturn 0x\(String(UInt32(bitPattern: r), radix: 16)))."
+        case .sendFailed(let l, let r): return "Failed to send \"\(l)\" (IOReturn 0x\(String(UInt32(bitPattern: r), radix: 16)))."
+        case .noAck(let l): return "The mouse did not acknowledge \"\(l)\" after 10 attempts."
+        case .invalidProfile(let e): return "Invalid profile:\n- " + e.joined(separator: "\n- ")
         case .bluetooth(let m): return "Bluetooth: \(m)"
         }
     }
 }
 
-/// Conexión con el M618XSD por IOKit. El canal de configuración y el de eventos
-/// son colecciones del mismo `IOHIDDevice` (interfaz MI_02).
+/// Connection to the M618XSD through IOKit. The configuration and event channels
+/// are collections of the same `IOHIDDevice` (interface MI_02).
 public final class HIDMouse: MouseConnection, @unchecked Sendable {
     public let mode: ConnectionMode
     private let device: IOHIDDevice
     private let manager: IOHIDManager
     private let inputBuffer = UnsafeMutablePointer<UInt8>.allocate(capacity: 64)
     private let ackLock = NSCondition()
-    /// Último ACK recibido: (aceptado, report ID confirmado).
+    /// Last ACK received: (accepted, acknowledged report ID).
     private var lastAck: (accepted: Bool, reportID: UInt8)?
 
-    /// Se llama en el run loop donde se programaron los eventos.
+    /// Called on the run loop where events were scheduled.
     public var onEvent: ((MouseEvent) -> Void)?
 
     deinit { inputBuffer.deallocate() }
@@ -123,7 +123,7 @@ public final class HIDMouse: MouseConnection, @unchecked Sendable {
         self.mode = mode
     }
 
-    /// Busca el mouse: primero por cable y después el receptor.
+    /// Finds the mouse: cable first, then the receiver.
     public static func find() throws -> HIDMouse {
         let manager = IOHIDManagerCreate(kCFAllocatorDefault, IOOptionBits(kIOHIDOptionsTypeNone))
         let matches: [[String: Any]] = [Protocol.wiredProductID, Protocol.receiverProductID].map {
@@ -144,7 +144,7 @@ public final class HIDMouse: MouseConnection, @unchecked Sendable {
         return HIDMouse(device: dev, manager: manager, mode: mode)
     }
 
-    /// true si el mouse está conectado al sistema por Bluetooth (HID con VID 0x045E / PID 0x0028).
+    /// true if the mouse is connected to the system over Bluetooth (HID with VID 0x045E / PID 0x0028).
     public static func bluetoothMousePresent() -> Bool {
         let manager = IOHIDManagerCreate(kCFAllocatorDefault, IOOptionBits(kIOHIDOptionsTypeNone))
         IOHIDManagerSetDeviceMatching(manager, [kIOHIDVendorIDKey: 0x045e, kIOHIDProductIDKey: 0x0028] as CFDictionary)
@@ -163,14 +163,14 @@ public final class HIDMouse: MouseConnection, @unchecked Sendable {
         return pairs.contains { ($0[kIOHIDDeviceUsagePageKey] as? Int) == page }
     }
 
-    /// Activa la recepción de eventos en `runLoop` (el principal en la app; el actual en la CLI).
+    /// Starts receiving events on `runLoop` (the main one in the app; the current one in the CLI).
     public func startEvents(on runLoop: RunLoop) {
         let ctx = Unmanaged.passUnretained(self).toOpaque()
         IOHIDDeviceRegisterInputReportCallback(device, inputBuffer, 64, { ctx, _, _, _, reportID, report, length in
                 guard let ctx else { return }
                 let me = Unmanaged<HIDMouse>.fromOpaque(ctx).takeUnretainedValue()
                 var bytes = Array(UnsafeBufferPointer(start: report, count: length))
-                // Según el driver, el report ID puede venir o no al inicio del buffer.
+                // Depending on the driver, the report ID may or may not be at the start of the buffer.
                 if bytes.first != UInt8(truncatingIfNeeded: reportID) { bytes.insert(UInt8(truncatingIfNeeded: reportID), at: 0) }
                 guard let ev = MouseEvent.parse(bytes) else { return }
                 if case .ack(let ok, let rid) = ev {
@@ -186,7 +186,7 @@ public final class HIDMouse: MouseConnection, @unchecked Sendable {
         IOHIDDeviceClose(device, IOOptionBits(kIOHIDOptionsTypeNone))
     }
 
-    /// Envía un feature report tal cual (byte 0 = report ID).
+    /// Sends a feature report as is (byte 0 = report ID).
     public func sendRaw(_ packet: [UInt8], label: String = "report") throws {
         let r = packet.withUnsafeBufferPointer {
             IOHIDDeviceSetReport(device, kIOHIDReportTypeFeature, CFIndex(packet[0]), $0.baseAddress!, $0.count)
@@ -194,7 +194,7 @@ public final class HIDMouse: MouseConnection, @unchecked Sendable {
         guard r == kIOReturnSuccess else { throw MouseError.sendFailed(label: label, r) }
     }
 
-    /// Espera hasta `timeout` un ACK aceptado del report `reportID`.
+    /// Waits up to `timeout` for an accepted ACK of report `reportID`.
     private func waitAck(for reportID: UInt8, timeout: TimeInterval) -> Bool {
         let deadline = Date().addingTimeInterval(timeout)
         ackLock.lock(); defer { ackLock.unlock() }
@@ -204,10 +204,10 @@ public final class HIDMouse: MouseConnection, @unchecked Sendable {
         return true
     }
 
-    /// Envía un paquete con la misma estrategia que la app de Windows:
-    /// por cable, un envío y hasta 500 ms de espera; por receptor, hasta 10 envíos
-    /// cada 500 ms hasta recibir el ACK.
-    /// Devuelve true si el mouse confirmó el comando con un ACK.
+    /// Sends a packet with the same strategy as the Windows app:
+    /// over cable, one write and up to 500 ms of waiting; over the receiver, up to 10 writes
+    /// every 500 ms until the ACK arrives.
+    /// Returns true if the mouse acknowledged the command.
     @discardableResult
     public func send(_ packet: [UInt8], label: String) throws -> Bool {
         let attempts = mode == .wired ? 1 : 10
@@ -216,8 +216,8 @@ public final class HIDMouse: MouseConnection, @unchecked Sendable {
             let start = Date()
             try sendRaw(packet, label: label)
             let acked = waitAck(for: packet[0], timeout: 0.5)
-            // Como la app de Windows: 500 ms entre comandos aunque el ACK llegue antes;
-            // si no, el mouse descarta el siguiente mientras guarda el anterior.
+            // Like the Windows app: 500 ms between commands even if the ACK arrives earlier;
+            // otherwise the mouse drops the next one while it stores the previous one.
             let remaining = 0.5 - Date().timeIntervalSince(start)
             if remaining > 0 { Thread.sleep(forTimeInterval: remaining) }
             if acked || mode == .wired { return acked }

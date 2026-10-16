@@ -1,6 +1,6 @@
 import Foundation
 
-/// Color RGB de 8 bits por canal.
+/// 8-bit-per-channel RGB color.
 public struct RGB: Codable, Equatable, Hashable, Sendable {
     public var r: UInt8
     public var g: UInt8
@@ -8,7 +8,7 @@ public struct RGB: Codable, Equatable, Hashable, Sendable {
     public init(_ r: UInt8, _ g: UInt8, _ b: UInt8) { self.r = r; self.g = g; self.b = b }
 }
 
-/// Un nivel de DPI. `dpi` debe ser múltiplo de 40 (la UI de Windows usa pasos de 40, de 40 a 4800).
+/// One DPI stage. `dpi` must be a multiple of 40 (the Windows UI uses steps of 40, from 40 to 4800).
 public struct DPIStage: Codable, Equatable, Sendable {
     public var enabled: Bool
     public var dpi: Int
@@ -19,31 +19,31 @@ public struct DPIStage: Codable, Equatable, Sendable {
 public enum PollingRate: Int, Codable, CaseIterable, Sendable {
     case hz125 = 125, hz250 = 250, hz500 = 500, hz1000 = 1000
 
-    /// Intervalo en ms que viaja en el report 0x06.
+    /// Interval in ms sent in report 0x06.
     var intervalCode: UInt8 {
         switch self { case .hz125: return 8; case .hz250: return 4; case .hz500: return 2; case .hz1000: return 1 }
     }
 }
 
-/// Modos de luz del combo `ms_4_combo_light` (índice 0–11).
+/// Lighting modes from the `ms_4_combo_light` combo box (index 0–11).
 public enum LightMode: Int, Codable, CaseIterable, Sendable {
     case off = 0, rainbowWave, neon, breathing, colorJump, staticColor
     case mixedBreathing, rainbowWave2, lightning, staticMixed, marquee, marquee2
 
     public var displayName: String {
         switch self {
-        case .off: return "Apagado"
-        case .rainbowWave: return "Ola arcoíris"
-        case .neon: return "Neón"
-        case .breathing: return "Respiración"
-        case .colorJump: return "Salto de color"
-        case .staticColor: return "Color fijo"
-        case .mixedBreathing: return "Respiración mixta"
-        case .rainbowWave2: return "Ola arcoíris 2"
-        case .lightning: return "Relámpago"
-        case .staticMixed: return "Mezcla fija"
-        case .marquee: return "Marquesina"
-        case .marquee2: return "Marquesina 2"
+        case .off: return "Off"
+        case .rainbowWave: return "Rainbow wave"
+        case .neon: return "Neon"
+        case .breathing: return "Breathing"
+        case .colorJump: return "Color jump"
+        case .staticColor: return "Static color"
+        case .mixedBreathing: return "Mixed breathing"
+        case .rainbowWave2: return "Rainbow wave 2"
+        case .lightning: return "Flash"
+        case .staticMixed: return "Static mix"
+        case .marquee: return "Marquee"
+        case .marquee2: return "Marquee 2"
         }
     }
 }
@@ -53,20 +53,20 @@ public struct Lighting: Codable, Equatable, Sendable {
     public var color: RGB
     /// 1–8
     public var brightness: Int
-    /// 4–8 (la UI de Windows limita el slider a ese rango)
+    /// 4–8 (the Windows UI limits the slider to this range)
     public var speed: Int
-    /// "Enable move close led": apaga la luz mientras el mouse se mueve.
+    /// "Enable move close led": turns the light off while the mouse is moving.
     public var offWhileMoving: Bool
 }
 
 public struct Power: Codable, Equatable, Sendable {
-    /// Minutos hasta apagar la luz, 1–60.
+    /// Minutes until the light turns off, 1–60.
     public var lightOffMinutes: Int
-    /// Minutos hasta suspender el mouse, 1–60.
+    /// Minutes until the mouse goes to sleep, 1–60.
     public var sleepMinutes: Int
 }
 
-/// Evento de una macro: tecla HID (o botón de mouse 0xF1–0xF5) pulsada o soltada, y retardo posterior.
+/// Macro event: HID key (or mouse button 0xF1–0xF5) pressed or released, and the delay after it.
 public struct MacroEvent: Codable, Equatable, Sendable {
     public var key: UInt8
     public var pressed: Bool
@@ -76,7 +76,7 @@ public struct MacroEvent: Codable, Equatable, Sendable {
 
 public struct Macro: Codable, Equatable, Sendable {
     public var name: String
-    /// Modo de repetición (byte en +0x0C del bloque de botón en `pro.data`).
+    /// Repeat mode (byte at +0x0C of the button block in `pro.data`).
     public var repeatMode: UInt8
     public var repeatCount: UInt8
     public var events: [MacroEvent]
@@ -85,11 +85,11 @@ public struct Macro: Codable, Equatable, Sendable {
     }
 }
 
-/// Asignación de una ranura de botón.
+/// Assignment of one button slot.
 public enum ButtonAssignment: Codable, Equatable, Sendable {
-    /// Función predefinida por ID (ver `ButtonFunction`).
+    /// Predefined function by ID (see `ButtonFunction`).
     case function(UInt8)
-    /// Atajo de teclado: modificadores (1 Ctrl, 2 Shift, 4 Alt, 8 Cmd/Win) + tecla HID.
+    /// Keyboard shortcut: modifiers (1 Ctrl, 2 Shift, 4 Alt, 8 Cmd/Win) + HID key.
     case shortcut(modifiers: UInt8, key: UInt8)
     case macro(Macro)
 }
@@ -100,18 +100,18 @@ public struct MouseProfile: Codable, Equatable, Sendable {
 
     public var name: String
     public var dpiStages: [DPIStage]
-    /// Índice 0–7 del nivel activo.
+    /// Index 0–7 of the active stage.
     public var activeStage: Int
     public var pollingRate: PollingRate
     public var lighting: Lighting
     public var power: Power
-    /// Tiempo de respuesta de teclas, 1–25.
+    /// Button response time, 1–25.
     public var debounce: Int
     public var buttons: [ButtonAssignment]
 
-    /// Perfil por defecto del driver de Windows para el M618XSD (`Data/ms_4/pro.data`, perfil "Profile1").
+    /// The Windows driver's default profile for the M618XSD (`Data/ms_4/pro.data`, profile "Profile1").
     public static let factoryDefault = MouseProfile(
-        name: "Predeterminado",
+        name: "Default",
         dpiStages: [
             DPIStage(enabled: true, dpi: 800, color: RGB(0xff, 0, 0)),
             DPIStage(enabled: true, dpi: 1200, color: RGB(0, 0xff, 0)),
@@ -130,35 +130,35 @@ public struct MouseProfile: Codable, Equatable, Sendable {
         buttons: ButtonFunction.defaultSlots.map { .function($0) }
     )
 
-    /// Lista de problemas que impedirían enviar el perfil. Vacía si es válido.
+    /// Problems that would prevent sending the profile. Empty if it is valid.
     public func validationErrors() -> [String] {
         var errors: [String] = []
-        if dpiStages.count != Self.stageCount { errors.append("Debe haber \(Self.stageCount) niveles de DPI.") }
+        if dpiStages.count != Self.stageCount { errors.append("There must be \(Self.stageCount) DPI stages.") }
         for (i, s) in dpiStages.enumerated() where s.enabled {
             if !(40...4800).contains(s.dpi) || s.dpi % 40 != 0 {
-                errors.append("Nivel \(i + 1): el DPI debe ser múltiplo de 40 entre 40 y 4800.")
+                errors.append("Stage \(i + 1): DPI must be a multiple of 40 between 40 and 4800.")
             }
         }
-        if !dpiStages.contains(where: \.enabled) { errors.append("Al menos un nivel de DPI debe estar activo.") }
+        if !dpiStages.contains(where: \.enabled) { errors.append("At least one DPI stage must be enabled.") }
         if !(0..<Self.stageCount).contains(activeStage) || !dpiStages[activeStage].enabled {
-            errors.append("El nivel activo debe ser uno de los habilitados.")
+            errors.append("The active stage must be one of the enabled stages.")
         }
-        if !(1...8).contains(lighting.brightness) { errors.append("Brillo fuera de rango (1–8).") }
-        if !(4...8).contains(lighting.speed) { errors.append("Velocidad fuera de rango (4–8).") }
-        if !(1...60).contains(power.lightOffMinutes) { errors.append("Apagado de luz fuera de rango (1–60).") }
-        if !(1...60).contains(power.sleepMinutes) { errors.append("Suspensión fuera de rango (1–60).") }
-        if !(1...25).contains(debounce) { errors.append("Tiempo de respuesta fuera de rango (1–25).") }
-        if buttons.count != Self.slotCount { errors.append("Debe haber \(Self.slotCount) ranuras de botón.") }
-        // Regla de la app de Windows: al menos un botón debe ser "clic izquierdo".
+        if !(1...8).contains(lighting.brightness) { errors.append("Brightness out of range (1–8).") }
+        if !(4...8).contains(lighting.speed) { errors.append("Speed out of range (4–8).") }
+        if !(1...60).contains(power.lightOffMinutes) { errors.append("Light-off timer out of range (1–60).") }
+        if !(1...60).contains(power.sleepMinutes) { errors.append("Sleep timer out of range (1–60).") }
+        if !(1...25).contains(debounce) { errors.append("Response time out of range (1–25).") }
+        if buttons.count != Self.slotCount { errors.append("There must be \(Self.slotCount) button slots.") }
+        // Rule from the Windows app: at least one button must be "left click".
         if !buttons.contains(.function(ButtonFunction.leftClick)) {
-            errors.append("Al menos un botón debe ser «Clic izquierdo».")
+            errors.append("At least one button must be \"Left click\".")
         }
         for (i, b) in buttons.enumerated() {
             if case .function(let id) = b, ButtonFunction.wireCode(for: id) == nil {
-                errors.append("Ranura \(i + 1): función desconocida \(id).")
+                errors.append("Slot \(i + 1): unknown function \(id).")
             }
             if case .macro(let m) = b, (try? Protocol.macroPayload(m)) == nil {
-                errors.append("Ranura \(i + 1): la macro «\(m.name)» es demasiado larga.")
+                errors.append("Slot \(i + 1): macro \"\(m.name)\" is too long.")
             }
         }
         return errors

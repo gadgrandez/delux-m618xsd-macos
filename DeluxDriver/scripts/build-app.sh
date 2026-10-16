@@ -1,5 +1,5 @@
 #!/bin/bash
-# Compila en modo release y empaqueta "DELUX M618XSD.app" en DeluxDriver/build/.
+# Builds in release mode and packages "DELUX M618XSD.app" into DeluxDriver/build/.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
@@ -28,11 +28,11 @@ cat > "$APP/Contents/Info.plist" <<'PLIST'
     <key>LSMinimumSystemVersion</key><string>13.0</string>
     <key>NSHighResolutionCapable</key><true/>
     <key>NSPrincipalClass</key><string>NSApplication</string>
-    <key>NSBluetoothAlwaysUsageDescription</key><string>Configurar el mouse DELUX M618XSD cuando está conectado por Bluetooth.</string>
+    <key>NSBluetoothAlwaysUsageDescription</key><string>Configure the DELUX M618XSD mouse when it is connected over Bluetooth.</string>
 </dict>
 </plist>
 PLIST
 
-# Firma ad hoc para que macOS la ejecute sin quejarse de una firma inválida.
+# Ad hoc signature so macOS runs it without complaining about an invalid signature.
 codesign --force --sign - "$APP"
-echo "App creada en: $(pwd)/$APP"
+echo "App created at: $(pwd)/$APP"

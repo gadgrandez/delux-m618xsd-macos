@@ -1,9 +1,9 @@
 import DeluxKit
 import Foundation
 
-/// Modo sin ventana para aplicar un perfil desde Terminal, sobre todo por Bluetooth
-/// (CoreBluetooth solo funciona dentro del .app):
-///   open -W "DELUX M618XSD.app" --args --apply perfil.json [--log salida.txt]
+/// Windowless mode to apply a profile from Terminal, mainly over Bluetooth
+/// (CoreBluetooth only works inside the .app):
+///   open -W "DELUX M618XSD.app" --args --apply profile.json [--log output.txt]
 enum Headless {
     static func runIfRequested() {
         let args = CommandLine.arguments
@@ -18,11 +18,11 @@ enum Headless {
         do {
             let profile = try JSONDecoder().decode(MouseProfile.self, from: Data(contentsOf: URL(fileURLWithPath: args[i + 1])))
             let mouse = try MouseFinder.connect(bluetoothTimeout: 8)
-            log("Aplicando «\(profile.name)» por \(mouse.mode.rawValue)…")
+            log("Applying \"\(profile.name)\" over \(mouse.mode.rawValue)…")
             try mouse.apply(profile) { label, n, total, acked in
-                log("  [\(n)/\(total)] \(label) \(acked ? "✔ confirmado" : "· sin ACK")")
+                log("  [\(n)/\(total)] \(label) \(acked ? "✔ acknowledged" : "· no ACK")")
             }
-            log("Listo.")
+            log("Done.")
             mouse.close()
             exit(0)
         } catch {

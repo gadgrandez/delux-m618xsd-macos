@@ -16,8 +16,6 @@ reverse-engineered from that driver.
 Tested on the real mouse in all three modes. Over Bluetooth the mouse does not allow
 changing the polling rate. Macros are experimental and can only be edited as JSON.
 
-The app's user interface is currently in Spanish.
-
 ## Requirements
 
 - macOS 13 or later.
@@ -36,7 +34,7 @@ for Bluetooth permission for the app.
 
 ## Usage
 
-Open the app, adjust the profile and click **Aplicar** (Apply, ⌘↩). The settings are stored
+Open the app, adjust the profile and click **Apply** (⌘↩). The settings are stored
 on the mouse itself.
 
 Command line (cable or receiver):
@@ -79,7 +77,7 @@ swift run selftest
 Issues and pull requests are welcome. Known open items:
 
 - Macro editor in the app, and confirming the meaning of the mode/repeat fields.
-- English localization of the user interface.
+- Localization of the user interface into other languages.
 - Reading the mouse's current settings (the Windows driver never reads them).
 - Support for other DELUX models that use the same protocol.
 

@@ -1,34 +1,34 @@
 import Foundation
 
-/// Codificación de los feature reports del M618XSD (modelo `ms_4` de DELUX Office Driver).
-/// Cada función reproduce la rutina equivalente de `Mouse.exe`; ver `docs/PROTOCOL.md`.
+/// Encoding of the M618XSD feature reports (model `ms_4` in DELUX Office Driver).
+/// Each function mirrors the equivalent routine in `Mouse.exe`; see `docs/PROTOCOL.md`.
 public enum Protocol {
     public static let vendorID = 0x1d57
     public static let wiredProductID = 0xfa28
     public static let receiverProductID = 0xfa60
-    /// Byte de modelo que el M618XSD pone en sus eventos (`03 28 …`).
+    /// Model byte the M618XSD puts in its events (`03 28 …`).
     public static let modelByte: UInt8 = 0x28
     public static let configUsagePage = 0x0B
     public static let eventUsagePage = 0x0A
 
-    /// Tamaño total (ID incluido) de cada feature report según el descriptor HID del mouse.
+    /// Total size (ID included) of each feature report according to the mouse's HID descriptor.
     public static let reportLength: [UInt8: Int] = [0x04: 52, 0x05: 13, 0x06: 9, 0x08: 59, 0x09: 64, 0x0c: 6]
 
     public enum EncodingError: Error, CustomStringConvertible {
         case macroTooLong(Int)
         public var description: String {
-            switch self { case .macroTooLong(let n): return "La macro ocupa \(n) bytes; el máximo es 100." }
+            switch self { case .macroTooLong(let n): return "The macro takes \(n) bytes; the maximum is 100." }
         }
     }
 
-    /// Suma de 16 bits de `bytes[from..<to]`, guardada big-endian en `bytes[to]`, `bytes[to+1]`.
+    /// 16-bit sum of `bytes[from..<to]`, stored big-endian in `bytes[to]`, `bytes[to+1]`.
     static func writeChecksum(_ bytes: inout [UInt8], from: Int, to: Int) {
         let sum = bytes[from..<to].reduce(UInt16(0)) { $0 &+ UInt16($1) }
         bytes[to] = UInt8(sum >> 8)
         bytes[to + 1] = UInt8(sum & 0xff)
     }
 
-    /// Report 0x0C: lo envía siempre la app antes de aplicar cambios.
+    /// Report 0x0C: the app always sends it before applying changes.
     public static func beginPacket() -> [UInt8] {
         [0x0c, 0x0a, 0x01, 0xfe, 0x01, 0xfe]
     }
@@ -41,7 +41,7 @@ public enum Protocol {
         var highMask: UInt8 = 0
         for (i, s) in p.dpiStages.prefix(8).enumerated() {
             if s.enabled { enabledMask |= 1 << i }
-            // La UI guarda DPI/40 y marca los niveles con valor > 60 (DPI > 2400).
+            // The UI stores DPI/40 and flags stages with a value > 60 (DPI > 2400).
             let raw = max(0, s.dpi / 40) * 40
             if raw / 40 > 60 { highMask |= 1 << i }
             b[8 + i] = UInt8(raw & 0xff)
@@ -59,7 +59,7 @@ public enum Protocol {
         return b
     }
 
-    /// Report 0x05: luz, energía y tiempo de respuesta (`FUN_00433cd0`).
+    /// Report 0x05: lighting, power and response time (`FUN_00433cd0`).
     public static func optionsPacket(_ p: MouseProfile) -> [UInt8] {
         var b = [UInt8](repeating: 0, count: 13)
         b[0] = 0x05; b[1] = 0x0f; b[2] = 0x01
@@ -77,13 +77,13 @@ public enum Protocol {
         return b
     }
 
-    /// Report 0x06: tasa de sondeo.
+    /// Report 0x06: polling rate.
     public static func pollingPacket(_ p: MouseProfile) -> [UInt8] {
         let r = p.pollingRate.intervalCode
         return [0x06, 0x09, 0x01, r, ~r, 0, 0, 0, 0]
     }
 
-    /// Report 0x08: asignación de las 18 ranuras (`FUN_00434690`).
+    /// Report 0x08: assignment of the 18 slots (`FUN_00434690`).
     public static func buttonsPacket(_ p: MouseProfile) -> [UInt8] {
         var b = [UInt8](repeating: 0, count: 59)
         b[0] = 0x08; b[1] = 0x3b; b[2] = 0x01
@@ -103,7 +103,7 @@ public enum Protocol {
         return b
     }
 
-    /// Pares de 2 bytes que describen los eventos de una macro (`FUN_00434400`).
+    /// 2-byte pairs describing a macro's events (`FUN_00434400`).
     static func macroPayload(_ m: Macro) throws -> [UInt8] {
         func delayByte(_ ms: Int, pressed: Bool) -> UInt8 {
             let flag: UInt8 = pressed ? 0x01 : 0x81
@@ -120,12 +120,12 @@ public enum Protocol {
                 out += [UInt8(truncatingIfNeeded: e.delayMs / 200), 0x03]
             }
         }
-        // Espacio entre el byte 29 y el checksum (byte 0x81).
+        // Room between byte 29 and the checksum (byte 0x81).
         guard out.count <= 0x81 - 29 else { throw EncodingError.macroTooLong(out.count) }
         return out
     }
 
-    /// Bloque lógico de 131 bytes del report 0x09 (`FUN_00434400`).
+    /// 131-byte logical block of report 0x09 (`FUN_00434400`).
     static func macroBlock(_ m: Macro, slot: Int) throws -> [UInt8] {
         let pairs = try macroPayload(m)
         var block = [UInt8](repeating: 0, count: 300)
@@ -139,7 +139,7 @@ public enum Protocol {
         return Array(block.prefix(0x83))
     }
 
-    /// Report 0x09 troceado en 3 paquetes de 64 bytes para la ranura `slot` (0-based).
+    /// Report 0x09 split into 3 packets of 64 bytes for slot `slot` (0-based).
     public static func macroPackets(_ m: Macro, slot: Int) throws -> [[UInt8]] {
         let block = try macroBlock(m, slot: slot) + [UInt8](repeating: 0, count: 300 - 0x83)
         return (0..<3).map { k in
@@ -150,8 +150,8 @@ public enum Protocol {
         }
     }
 
-    /// Por Bluetooth (`FEE3`), la app de Windows envía cada paquete con el largo de su byte 1
-    /// (sin recortar al descriptor HID), omite el polling y manda cada macro en un solo bloque.
+    /// Over Bluetooth (`FEE3`), the Windows app sends each packet with the length in its byte 1
+    /// (not trimmed to the HID descriptor), skips polling and sends each macro as a single block.
     public static func applySequence(_ p: MouseProfile, for mode: ConnectionMode) throws -> [(label: String, bytes: [UInt8])] {
         guard mode == .bluetooth else { return try applySequence(p) }
         var seq: [(String, [UInt8])] = []
@@ -159,24 +159,24 @@ public enum Protocol {
             seq.append((label, bytes + [UInt8](repeating: 0, count: max(0, Int(bytes[1]) - bytes.count))))
         }
         for (slot, a) in p.buttons.enumerated() {
-            if case .macro(let m) = a { seq.append(("Macro ranura \(slot + 1)", try macroBlock(m, slot: slot))) }
+            if case .macro(let m) = a { seq.append(("Macro slot \(slot + 1)", try macroBlock(m, slot: slot))) }
         }
         return seq
     }
 
-    /// Secuencia completa de "Aplicar" por HID, en el mismo orden que la app de Windows.
+    /// Full "Apply" sequence over HID, in the same order as the Windows app.
     public static func applySequence(_ p: MouseProfile) throws -> [(label: String, bytes: [UInt8])] {
         var seq: [(String, [UInt8])] = [
-            ("Inicio", beginPacket()),
+            ("Start", beginPacket()),
             ("DPI", dpiPacket(p)),
-            ("Luz y energía", optionsPacket(p)),
+            ("Lighting and power", optionsPacket(p)),
             ("Polling", pollingPacket(p)),
-            ("Botones", buttonsPacket(p)),
+            ("Buttons", buttonsPacket(p)),
         ]
         for (slot, a) in p.buttons.enumerated() {
             if case .macro(let m) = a {
                 for (k, pkt) in try macroPackets(m, slot: slot).enumerated() {
-                    seq.append(("Macro ranura \(slot + 1) (\(k + 1)/3)", pkt))
+                    seq.append(("Macro slot \(slot + 1) (\(k + 1)/3)", pkt))
                 }
             }
         }

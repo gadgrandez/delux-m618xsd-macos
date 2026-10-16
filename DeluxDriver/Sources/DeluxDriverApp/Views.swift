@@ -8,7 +8,7 @@ struct DeluxDriverApp: App {
 
     init() {
         Headless.runIfRequested()
-        // Necesario al ejecutar el binario fuera de un .app (swift run).
+        // Needed when running the binary outside a .app (swift run).
         NSApplication.shared.setActivationPolicy(.regular)
         NSApplication.shared.activate(ignoringOtherApps: true)
     }
@@ -47,9 +47,9 @@ struct ContentView: View {
             Divider()
             TabView {
                 DPIView().tabItem { Text("DPI") }
-                ButtonsView().tabItem { Text("Botones") }
-                LightingView().tabItem { Text("Iluminación") }
-                PerformanceView().tabItem { Text("Rendimiento") }
+                ButtonsView().tabItem { Text("Buttons") }
+                LightingView().tabItem { Text("Lighting") }
+                PerformanceView().tabItem { Text("Performance") }
             }
             .padding()
         }
@@ -60,27 +60,27 @@ struct ContentView: View {
 
     private var header: some View {
         HStack(spacing: 12) {
-            Picker("Perfil", selection: $model.store.selected) {
+            Picker("Profile", selection: $model.store.selected) {
                 ForEach(model.store.profiles.indices, id: \.self) { i in
                     Text(model.store.profiles[i].name).tag(i)
                 }
             }
             .frame(maxWidth: 260)
 
-            Menu("Perfiles") {
-                Button("Nuevo") { model.addProfile() }
-                Button("Duplicar") { model.duplicateProfile() }
-                Button("Restablecer valores de fábrica") { model.resetProfile() }
+            Menu("Profiles") {
+                Button("New") { model.addProfile() }
+                Button("Duplicate") { model.duplicateProfile() }
+                Button("Reset to factory defaults") { model.resetProfile() }
                 Divider()
-                Button("Importar de Windows (pro.data)…") { model.importWindowsProfile() }
-                Button("Importar JSON…") { model.importJSONProfile() }
-                Button("Exportar JSON…") { model.exportProfile() }
+                Button("Import from Windows (pro.data)…") { model.importWindowsProfile() }
+                Button("Import JSON…") { model.importJSONProfile() }
+                Button("Export JSON…") { model.exportProfile() }
                 Divider()
-                Button("Eliminar", role: .destructive) { model.deleteProfile() }
+                Button("Delete", role: .destructive) { model.deleteProfile() }
             }
             .fixedSize()
 
-            TextField("Nombre", text: $model.profile.name)
+            TextField("Name", text: $model.profile.name)
                 .frame(maxWidth: 160)
 
             Spacer()
@@ -89,16 +89,16 @@ struct ContentView: View {
                 if let mode = model.connection {
                     Label(mode.rawValue, systemImage: "checkmark.circle.fill").foregroundStyle(.green)
                 } else {
-                    Label("Mouse no detectado", systemImage: "xmark.circle").foregroundStyle(.secondary)
+                    Label("Mouse not detected", systemImage: "xmark.circle").foregroundStyle(.secondary)
                 }
-                if let b = model.battery { Text("Batería: \(b)").font(.caption).foregroundStyle(.secondary) }
+                if let b = model.battery { Text("Battery: \(b)").font(.caption).foregroundStyle(.secondary) }
             }
 
             if let step = model.applying {
                 ProgressView().controlSize(.small)
                 Text(step).font(.caption).frame(width: 150, alignment: .leading)
             } else {
-                Button("Aplicar") { model.apply() }
+                Button("Apply") { model.apply() }
                     .keyboardShortcut(.return, modifiers: .command)
                     .buttonStyle(.borderedProminent)
                     .disabled(model.connection == nil)
@@ -113,7 +113,7 @@ struct DPIView: View {
 
     var body: some View {
         Form {
-            Section("Niveles de DPI") {
+            Section("DPI stages") {
                 ForEach(0..<MouseProfile.stageCount, id: \.self) { i in
                     let stage = $model.profile.dpiStages[i]
                     HStack {
@@ -121,7 +121,7 @@ struct DPIView: View {
                             stage.wrappedValue.enabled = on
                             if on && stage.wrappedValue.dpi < 40 { stage.wrappedValue.dpi = 800 }
                         })).labelsHidden()
-                        Text("Nivel \(i + 1)").frame(width: 60, alignment: .leading)
+                        Text("Stage \(i + 1)").frame(width: 60, alignment: .leading)
                         Slider(value: Binding(get: { Double(max(stage.wrappedValue.dpi, 40)) },
                                               set: { stage.wrappedValue.dpi = Int($0 / 40) * 40 }),
                                in: 40...4800, step: 40)
@@ -134,13 +134,13 @@ struct DPIView: View {
                             Image(systemName: model.profile.activeStage == i ? "largecircle.fill.circle" : "circle")
                         }
                         .buttonStyle(.plain)
-                        .help("Nivel activo al aplicar")
+                        .help("Active stage after applying")
                         .disabled(!stage.wrappedValue.enabled)
                     }
                 }
             }
             if let live = model.liveStage {
-                Text("El mouse informa que está en el nivel \(live).").font(.caption).foregroundStyle(.secondary)
+                Text("The mouse reports it is on stage \(live).").font(.caption).foregroundStyle(.secondary)
             }
         }
         .formStyle(.grouped)
@@ -157,9 +157,9 @@ struct ButtonsView: View {
                     ButtonRow(slot: slot, assignment: $model.profile.buttons[slot])
                 }
             } header: {
-                Text("Asignación de botones")
+                Text("Button assignment")
             } footer: {
-                Text("Los atajos «macOS» envían Cmd (⌘) desde el propio mouse. Las macros solo se editan por JSON (experimental).")
+                Text("macOS shortcuts send Cmd (⌘) from the mouse itself. Macros can only be edited as JSON (experimental).")
                     .font(.caption).foregroundStyle(.secondary)
             }
         }
@@ -185,15 +185,15 @@ struct ButtonRow: View {
         HStack {
             Text(ButtonFunction.slotName(slot)).frame(width: 150, alignment: .leading)
             Picker("", selection: Binding(get: { selectionKey }, set: apply)) {
-                ForEach(Array(Dictionary(grouping: ButtonFunction.all, by: \.group).sorted { $0.key < $1.key }), id: \.key) { group, items in
+                ForEach(ButtonFunction.groups, id: \.self) { group in
                     Section(group) {
-                        ForEach(items, id: \.id) { Text($0.name).tag("f\($0.id)") }
+                        ForEach(ButtonFunction.all.filter { $0.group == group }, id: \.id) { Text($0.name).tag("f\($0.id)") }
                     }
                 }
-                Section("Atajos de macOS") {
+                Section("macOS shortcuts") {
                     ForEach(MacShortcut.presets.indices, id: \.self) { Text(MacShortcut.presets[$0].name).tag("s\($0)") }
                 }
-                if case .shortcut = assignment, selectionKey == "custom" { Text("Atajo personalizado").tag("custom") }
+                if case .shortcut = assignment, selectionKey == "custom" { Text("Custom shortcut").tag("custom") }
                 if case .macro(let m) = assignment { Text("Macro: \(m.name)").tag("macro") }
             }
             .labelsHidden()
@@ -216,20 +216,20 @@ struct LightingView: View {
     var body: some View {
         let light = $model.profile.lighting
         Form {
-            Section("Iluminación") {
-                Picker("Modo", selection: light.mode) {
+            Section("Lighting") {
+                Picker("Mode", selection: light.mode) {
                     ForEach(LightMode.allCases, id: \.self) { Text($0.displayName).tag($0) }
                 }
                 ColorPicker("Color", selection: light.color.color, supportsOpacity: false)
-                LabeledContent("Brillo") {
+                LabeledContent("Brightness") {
                     Slider(value: intBinding(light.brightness), in: 1...8, step: 1)
                     Text("\(light.wrappedValue.brightness)").monospacedDigit().frame(width: 24)
                 }
-                LabeledContent("Velocidad") {
+                LabeledContent("Speed") {
                     Slider(value: intBinding(light.speed), in: 4...8, step: 1)
                     Text("\(light.wrappedValue.speed)").monospacedDigit().frame(width: 24)
                 }
-                Toggle("Apagar la luz mientras el mouse se mueve", isOn: light.offWhileMoving)
+                Toggle("Turn the light off while the mouse moves", isOn: light.offWhileMoving)
             }
         }
         .formStyle(.grouped)
@@ -241,31 +241,31 @@ struct PerformanceView: View {
 
     var body: some View {
         Form {
-            Section("Tasa de sondeo") {
+            Section("Polling rate") {
                 Picker("Polling", selection: $model.profile.pollingRate) {
-                    Text("125 Hz (ahorro)").tag(PollingRate.hz125)
-                    Text("250 Hz (oficina)").tag(PollingRate.hz250)
-                    Text("500 Hz (juego)").tag(PollingRate.hz500)
+                    Text("125 Hz (power saving)").tag(PollingRate.hz125)
+                    Text("250 Hz (office)").tag(PollingRate.hz250)
+                    Text("500 Hz (gaming)").tag(PollingRate.hz500)
                     Text("1000 Hz (e-sports)").tag(PollingRate.hz1000)
                 }
                 .pickerStyle(.segmented)
                 if model.connection == .bluetooth {
-                    Text("Por Bluetooth el mouse no admite cambiar la tasa de sondeo; se aplica por cable o receptor.")
+                    Text("Over Bluetooth the mouse does not allow changing the polling rate; apply it over cable or receiver.")
                         .font(.caption).foregroundStyle(.secondary)
                 }
             }
-            Section("Respuesta de los botones") {
-                LabeledContent("Tiempo de respuesta") {
+            Section("Button response") {
+                LabeledContent("Response time") {
                     Slider(value: intBinding($model.profile.debounce), in: 1...25, step: 1)
                     Text("\(model.profile.debounce)").monospacedDigit().frame(width: 24)
                 }
             }
-            Section("Energía") {
-                LabeledContent("Apagar luz tras") {
+            Section("Power") {
+                LabeledContent("Light off after") {
                     Slider(value: intBinding($model.profile.power.lightOffMinutes), in: 1...60, step: 1)
                     Text("\(model.profile.power.lightOffMinutes) min").monospacedDigit().frame(width: 56)
                 }
-                LabeledContent("Suspender tras") {
+                LabeledContent("Sleep after") {
                     Slider(value: intBinding($model.profile.power.sleepMinutes), in: 1...60, step: 1)
                     Text("\(model.profile.power.sleepMinutes) min").monospacedDigit().frame(width: 56)
                 }

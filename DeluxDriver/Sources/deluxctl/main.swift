@@ -2,19 +2,19 @@ import DeluxKit
 import Foundation
 
 let usage = """
-deluxctl — configuración del DELUX M618XSD en macOS
+deluxctl — DELUX M618XSD configuration on macOS
 
-  deluxctl info                         Detecta el mouse y el modo de conexión
-  deluxctl dump [perfil.json]           Muestra los paquetes que se enviarían (no envía nada)
-  deluxctl import-windows pro.data [salida.json]
-                                        Convierte un perfil de DELUX Office Driver a JSON
-  deluxctl apply perfil.json --yes      Envía el perfil al mouse
-  deluxctl listen [segundos]            Muestra los eventos del mouse (DPI, batería, ACK…)
+  deluxctl info                         Detect the mouse and the connection mode
+  deluxctl dump [profile.json]          Print the packets that would be sent (sends nothing)
+  deluxctl import-windows pro.data [output.json]
+                                        Convert a DELUX Office Driver profile to JSON
+  deluxctl apply profile.json --yes     Send the profile to the mouse
+  deluxctl listen [seconds]             Print mouse events (DPI, battery, ACK…)
 
-La CLI usa cable o receptor. Por Bluetooth usa la app (macOS exige un .app para Bluetooth):
-  open -W "DELUX M618XSD.app" --args --apply perfil.json --log salida.txt
+The CLI uses cable or receiver. For Bluetooth use the app (macOS requires a .app for Bluetooth):
+  open -W "DELUX M618XSD.app" --args --apply profile.json --log output.txt
 
-Sin perfil.json se usa el perfil seleccionado en la app (\(ProfileStore.fileURL.path)).
+Without profile.json, the profile selected in the app is used (\(ProfileStore.fileURL.path)).
 """
 
 func fail(_ msg: String) -> Never {
@@ -30,11 +30,11 @@ func loadProfile(_ path: String?) -> MouseProfile {
     do {
         return try JSONDecoder().decode(MouseProfile.self, from: Data(contentsOf: URL(fileURLWithPath: path)))
     } catch {
-        fail("No se pudo leer \(path): \(error)")
+        fail("Could not read \(path): \(error)")
     }
 }
 
-/// Ejecuta `work` en segundo plano mientras el hilo principal atiende el run loop (eventos HID).
+/// Runs `work` in the background while the main thread services the run loop (HID events).
 func runWithRunLoop(_ work: @escaping @Sendable () -> Int32) -> Never {
     var code: Int32 = 0
     let done = DispatchSemaphore(value: 0)
@@ -53,14 +53,14 @@ switch command {
 case "info":
     do {
         let mouse = try MouseFinder.connect(includeBluetooth: false)
-        print("Encontrado: DELUX M618XSD — \(mouse.mode.rawValue)")
+        print("Found: DELUX M618XSD — \(mouse.mode.rawValue)")
         mouse.close()
     } catch { fail("\(error)") }
 
 case "dump":
     let profile = loadProfile(args.first)
     let errors = profile.validationErrors()
-    if !errors.isEmpty { print("⚠️  Perfil inválido:\n- " + errors.joined(separator: "\n- ")) }
+    if !errors.isEmpty { print("⚠️  Invalid profile:\n- " + errors.joined(separator: "\n- ")) }
     do {
         for (label, bytes) in try Protocol.applySequence(profile) {
             print("\(label.padding(toLength: 26, withPad: " ", startingAt: 0)) \(bytes.hex)")
@@ -68,38 +68,38 @@ case "dump":
     } catch { fail("\(error)") }
 
 case "import-windows":
-    guard let src = args.first else { fail("Falta la ruta a pro.data") }
+    guard let src = args.first else { fail("Missing path to pro.data") }
     do {
         let profiles = try WindowsProfileImporter.importProfiles(from: URL(fileURLWithPath: src))
-        guard !profiles.isEmpty else { fail("No hay perfiles en \(src)") }
+        guard !profiles.isEmpty else { fail("No profiles in \(src)") }
         let enc = JSONEncoder()
         enc.outputFormatting = [.prettyPrinted, .sortedKeys]
         if args.count > 1 {
             try enc.encode(profiles[0]).write(to: URL(fileURLWithPath: args[1]))
-            print("Guardado «\(profiles[0].name)» en \(args[1]) (\(profiles.count) perfil(es) en el archivo).")
+            print("Saved \"\(profiles[0].name)\" to \(args[1]) (\(profiles.count) profile(s) in the file).")
         } else {
             var store = ProfileStore.load()
             store.profiles.append(contentsOf: profiles)
             try store.save()
-            print("Importados \(profiles.count) perfil(es) a \(ProfileStore.fileURL.path).")
+            print("Imported \(profiles.count) profile(s) into \(ProfileStore.fileURL.path).")
         }
     } catch { fail("\(error)") }
 
 case "apply":
     let path = args.first { !$0.hasPrefix("--") }
     guard args.contains("--yes") else {
-        fail("Por seguridad, añade --yes para enviar. Usa «deluxctl dump» para revisar los paquetes antes.")
+        fail("For safety, add --yes to send. Use \"deluxctl dump\" to review the packets first.")
     }
     let profile = loadProfile(path)
     runWithRunLoop {
         do {
             let mouse = try MouseFinder.connect(includeBluetooth: false)
             mouse.startEvents()
-            print("Aplicando «\(profile.name)» por \(mouse.mode.rawValue)…")
+            print("Applying \"\(profile.name)\" over \(mouse.mode.rawValue)…")
             try mouse.apply(profile) { label, i, n, acked in
-                print("  [\(i)/\(n)] \(label) \(acked ? "✔ confirmado" : "· sin ACK")")
+                print("  [\(i)/\(n)] \(label) \(acked ? "✔ acknowledged" : "· no ACK")")
             }
-            print("Listo.")
+            print("Done.")
             mouse.close()
             return 0
         } catch {
@@ -109,9 +109,9 @@ case "apply":
     }
 
 case "raw":
-    // Diagnóstico: deluxctl raw 05 0f 01 … --yes  (envía un feature report tal cual y muestra el ACK)
+    // Diagnostics: deluxctl raw 05 0f 01 … --yes  (sends a feature report as is and prints the ACK)
     let hexBytes = args.filter { !$0.hasPrefix("--") }.compactMap { UInt8($0, radix: 16) }
-    guard !hexBytes.isEmpty, args.contains("--yes") else { fail("Uso: deluxctl raw <bytes hex> --yes") }
+    guard !hexBytes.isEmpty, args.contains("--yes") else { fail("Usage: deluxctl raw <hex bytes> --yes") }
     runWithRunLoop {
         do {
             let mouse = try MouseFinder.connect(includeBluetooth: false)
@@ -119,7 +119,7 @@ case "raw":
             mouse.startEvents()
             let acked = try mouse.send(hexBytes, label: "raw")
             Thread.sleep(forTimeInterval: 0.3)
-            print("Enviados \(hexBytes.count) bytes: \(acked ? "✔ confirmado" : "· sin ACK")")
+            print("Sent \(hexBytes.count) bytes: \(acked ? "✔ acknowledged" : "· no ACK")")
             mouse.close()
             return 0
         } catch {
@@ -132,9 +132,9 @@ case "listen":
     let seconds = args.first.flatMap(Double.init) ?? 30
     do {
         let mouse = try MouseFinder.connect(includeBluetooth: false)
-        mouse.onEvent = { print("Evento: \($0)") }
+        mouse.onEvent = { print("Event: \($0)") }
         mouse.startEvents()
-        print("Escuchando \(Int(seconds)) s por \(mouse.mode.rawValue)… (pulsa el botón DPI para probar)")
+        print("Listening for \(Int(seconds)) s over \(mouse.mode.rawValue)… (press the DPI button to test)")
         RunLoop.main.run(until: Date().addingTimeInterval(seconds))
         mouse.close()
     } catch { fail("\(error)") }

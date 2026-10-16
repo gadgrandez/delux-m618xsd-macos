@@ -1,7 +1,7 @@
 import Foundation
 
-/// Funciones asignables a un botón, con los IDs que usa `Mouse.exe` (manejador del menú `ms_4_*`)
-/// y su traducción a los 3 bytes del report 0x08 (tabla en `Mouse.exe` @ 0x447778).
+/// Functions that can be assigned to a button, with the IDs used by `Mouse.exe` (`ms_4_*` menu handler)
+/// and their translation to the 3 bytes of report 0x08 (table in `Mouse.exe` @ 0x447778).
 public enum ButtonFunction {
     public static let off: UInt8 = 0
     public static let leftClick: UInt8 = 1
@@ -14,7 +14,7 @@ public enum ButtonFunction {
         public let group: String
     }
 
-    /// ID → (código, b1, b2) tal cual la tabla del driver de Windows.
+    /// ID → (code, b1, b2), exactly as in the Windows driver's table.
     static let wireTable: [UInt8: (UInt8, UInt8, UInt8)] = [
         0: (1, 0, 0), 1: (2, 0, 0), 2: (3, 0, 0), 3: (4, 0, 0), 4: (6, 0, 0), 5: (5, 0, 0),
         9: (7, 0, 0), 10: (8, 0, 0), 11: (9, 0, 0), 12: (10, 0, 0), 13: (11, 0, 0), 14: (12, 0, 0),
@@ -33,74 +33,77 @@ public enum ButtonFunction {
 
     static func wireCode(for id: UInt8) -> (UInt8, UInt8, UInt8)? { wireTable[id] }
 
-    /// Funciones que ofrece el menú de botones del M618XSD en Windows.
+    /// Functions offered by the M618XSD button menu on Windows.
     public static let all: [Info] = [
-        Info(id: 1, name: "Clic izquierdo", group: "Mouse"),
-        Info(id: 2, name: "Clic derecho", group: "Mouse"),
-        Info(id: 3, name: "Botón central", group: "Mouse"),
-        Info(id: 4, name: "Adelante", group: "Mouse"),
-        Info(id: 5, name: "Atrás", group: "Mouse"),
-        Info(id: 9, name: "Doble clic", group: "Mouse"),
-        Info(id: 10, name: "Disparo rápido", group: "Mouse"),
+        Info(id: 1, name: "Left click", group: "Mouse"),
+        Info(id: 2, name: "Right click", group: "Mouse"),
+        Info(id: 3, name: "Middle click", group: "Mouse"),
+        Info(id: 4, name: "Forward", group: "Mouse"),
+        Info(id: 5, name: "Back", group: "Mouse"),
+        Info(id: 9, name: "Double click", group: "Mouse"),
+        Info(id: 10, name: "Fire key", group: "Mouse"),
         Info(id: 22, name: "Easy Aim", group: "Mouse"),
-        Info(id: 11, name: "Rueda arriba", group: "Mouse"),
-        Info(id: 12, name: "Rueda abajo", group: "Mouse"),
-        Info(id: 13, name: "Desplazar a la izquierda", group: "Mouse"),
-        Info(id: 14, name: "Desplazar a la derecha", group: "Mouse"),
-        Info(id: 0, name: "Desactivado", group: "Mouse"),
-        Info(id: 6, name: "Ciclo de DPI", group: "DPI"),
-        Info(id: 7, name: "DPI +", group: "DPI"),
-        Info(id: 8, name: "DPI −", group: "DPI"),
-        Info(id: 23, name: "Ciclo de luz", group: "DPI"),
-        Info(id: 64, name: "Reproductor", group: "Multimedia"),
-        Info(id: 65, name: "Reproducir / pausa", group: "Multimedia"),
-        Info(id: 66, name: "Detener", group: "Multimedia"),
-        Info(id: 67, name: "Pista anterior", group: "Multimedia"),
-        Info(id: 68, name: "Pista siguiente", group: "Multimedia"),
-        Info(id: 69, name: "Volumen +", group: "Multimedia"),
-        Info(id: 70, name: "Volumen −", group: "Multimedia"),
-        Info(id: 71, name: "Silencio", group: "Multimedia"),
-        Info(id: 80, name: "Navegador: inicio", group: "Navegador"),
-        Info(id: 81, name: "Navegador: favoritos", group: "Navegador"),
-        Info(id: 82, name: "Navegador: adelante", group: "Navegador"),
-        Info(id: 83, name: "Navegador: atrás", group: "Navegador"),
-        Info(id: 84, name: "Navegador: detener", group: "Navegador"),
-        Info(id: 85, name: "Navegador: recargar", group: "Navegador"),
-        Info(id: 86, name: "Navegador: buscar", group: "Navegador"),
-        Info(id: 87, name: "Correo", group: "Navegador"),
-        Info(id: 88, name: "Calculadora", group: "Navegador"),
-        Info(id: 89, name: "Mi PC", group: "Navegador"),
+        Info(id: 11, name: "Scroll up", group: "Mouse"),
+        Info(id: 12, name: "Scroll down", group: "Mouse"),
+        Info(id: 13, name: "Scroll left", group: "Mouse"),
+        Info(id: 14, name: "Scroll right", group: "Mouse"),
+        Info(id: 0, name: "Disabled", group: "Mouse"),
+        Info(id: 6, name: "DPI cycle", group: "DPI and lighting"),
+        Info(id: 7, name: "DPI +", group: "DPI and lighting"),
+        Info(id: 8, name: "DPI −", group: "DPI and lighting"),
+        Info(id: 23, name: "Lighting cycle", group: "DPI and lighting"),
+        Info(id: 64, name: "Media player", group: "Multimedia"),
+        Info(id: 65, name: "Play / pause", group: "Multimedia"),
+        Info(id: 66, name: "Stop", group: "Multimedia"),
+        Info(id: 67, name: "Previous track", group: "Multimedia"),
+        Info(id: 68, name: "Next track", group: "Multimedia"),
+        Info(id: 69, name: "Volume +", group: "Multimedia"),
+        Info(id: 70, name: "Volume −", group: "Multimedia"),
+        Info(id: 71, name: "Mute", group: "Multimedia"),
+        Info(id: 80, name: "Browser: home", group: "Browser and apps"),
+        Info(id: 81, name: "Browser: favorites", group: "Browser and apps"),
+        Info(id: 82, name: "Browser: forward", group: "Browser and apps"),
+        Info(id: 83, name: "Browser: back", group: "Browser and apps"),
+        Info(id: 84, name: "Browser: stop", group: "Browser and apps"),
+        Info(id: 85, name: "Browser: refresh", group: "Browser and apps"),
+        Info(id: 86, name: "Browser: search", group: "Browser and apps"),
+        Info(id: 87, name: "Mail", group: "Browser and apps"),
+        Info(id: 88, name: "Calculator", group: "Browser and apps"),
+        Info(id: 89, name: "My Computer", group: "Browser and apps"),
     ]
 
+    /// Groups in menu order (as they first appear in `all`).
+    public static let groups: [String] = all.reduce(into: []) { if !$0.contains($1.group) { $0.append($1.group) } }
+
     public static func name(for id: UInt8) -> String {
-        all.first { $0.id == id }?.name ?? "Función \(id)"
+        all.first { $0.id == id }?.name ?? "Function \(id)"
     }
 
-    /// Asignación de fábrica de las 18 ranuras (perfil por defecto de Windows).
+    /// Factory assignment of the 18 slots (Windows default profile).
     public static let defaultSlots: [UInt8] = [1, 2, 4, 5, 3, 6, 0, 0, 0, 0, 0, 0, 0, 0, 13, 14, 11, 12]
 
-    /// Nombre de la ranura física según la asignación de fábrica.
+    /// Name of the physical slot according to the factory assignment.
     public static func slotName(_ slot: Int) -> String {
         switch slot {
-        case 0: return "Botón izquierdo"
-        case 1: return "Botón derecho"
-        case 2: return "Lateral adelante"
-        case 3: return "Lateral atrás"
-        case 4: return "Botón central"
-        case 5: return "Botón DPI"
-        case 14: return "Inclinación izquierda"
-        case 15: return "Inclinación derecha"
-        case 16: return "Rueda arriba"
-        case 17: return "Rueda abajo"
-        default: return "Ranura \(slot + 1)"
+        case 0: return "Left button"
+        case 1: return "Right button"
+        case 2: return "Side forward"
+        case 3: return "Side back"
+        case 4: return "Middle button"
+        case 5: return "DPI button"
+        case 14: return "Wheel tilt left"
+        case 15: return "Wheel tilt right"
+        case 16: return "Wheel up"
+        case 17: return "Wheel down"
+        default: return "Slot \(slot + 1)"
         }
     }
 
-    /// Ranuras que corresponden a controles físicos del M618XSD.
+    /// Slots that map to physical controls on the M618XSD.
     public static let physicalSlots: [Int] = [0, 1, 2, 3, 4, 5, 14, 15, 16, 17]
 }
 
-/// Atajos útiles en macOS, implementados como atajo personalizado (Cmd = modificador 8).
+/// Useful macOS shortcuts, implemented as custom shortcuts (Cmd = modifier 8).
 public enum MacShortcut {
     public struct Preset: Sendable {
         public let name: String
@@ -109,21 +112,21 @@ public enum MacShortcut {
     }
 
     public static let presets: [Preset] = [
-        Preset(name: "Copiar (⌘C)", modifiers: 8, key: 0x06),
-        Preset(name: "Pegar (⌘V)", modifiers: 8, key: 0x19),
-        Preset(name: "Cortar (⌘X)", modifiers: 8, key: 0x1b),
-        Preset(name: "Deshacer (⌘Z)", modifiers: 8, key: 0x1d),
-        Preset(name: "Rehacer (⇧⌘Z)", modifiers: 10, key: 0x1d),
-        Preset(name: "Seleccionar todo (⌘A)", modifiers: 8, key: 0x04),
-        Preset(name: "Guardar (⌘S)", modifiers: 8, key: 0x16),
-        Preset(name: "Buscar (⌘F)", modifiers: 8, key: 0x09),
-        Preset(name: "Nueva pestaña (⌘T)", modifiers: 8, key: 0x17),
-        Preset(name: "Cerrar ventana (⌘W)", modifiers: 8, key: 0x1a),
-        Preset(name: "Cambiar de app (⌘Tab)", modifiers: 8, key: 0x2b),
-        Preset(name: "Captura de pantalla (⇧⌘4)", modifiers: 10, key: 0x21),
+        Preset(name: "Copy (⌘C)", modifiers: 8, key: 0x06),
+        Preset(name: "Paste (⌘V)", modifiers: 8, key: 0x19),
+        Preset(name: "Cut (⌘X)", modifiers: 8, key: 0x1b),
+        Preset(name: "Undo (⌘Z)", modifiers: 8, key: 0x1d),
+        Preset(name: "Redo (⇧⌘Z)", modifiers: 10, key: 0x1d),
+        Preset(name: "Select all (⌘A)", modifiers: 8, key: 0x04),
+        Preset(name: "Save (⌘S)", modifiers: 8, key: 0x16),
+        Preset(name: "Find (⌘F)", modifiers: 8, key: 0x09),
+        Preset(name: "New tab (⌘T)", modifiers: 8, key: 0x17),
+        Preset(name: "Close window (⌘W)", modifiers: 8, key: 0x1a),
+        Preset(name: "Switch app (⌘Tab)", modifiers: 8, key: 0x2b),
+        Preset(name: "Screenshot (⇧⌘4)", modifiers: 10, key: 0x21),
         Preset(name: "Mission Control (⌃↑)", modifiers: 1, key: 0x52),
-        Preset(name: "Escritorio izquierda (⌃←)", modifiers: 1, key: 0x50),
-        Preset(name: "Escritorio derecha (⌃→)", modifiers: 1, key: 0x4f),
-        Preset(name: "Spotlight (⌘Espacio)", modifiers: 8, key: 0x2c),
+        Preset(name: "Desktop left (⌃←)", modifiers: 1, key: 0x50),
+        Preset(name: "Desktop right (⌃→)", modifiers: 1, key: 0x4f),
+        Preset(name: "Spotlight (⌘Space)", modifiers: 8, key: 0x2c),
     ]
 }
