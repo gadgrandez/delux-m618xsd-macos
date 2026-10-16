@@ -16,7 +16,20 @@ reverse-engineered from that driver.
 Tested on the real mouse in all three modes. Over Bluetooth the mouse does not allow
 changing the polling rate. Macros are experimental and can only be edited as JSON.
 
-## Requirements
+## Download
+
+Get the latest build from [Releases](https://github.com/gadgrandez/delux-m618xsd-macos/releases/latest),
+unzip it and move `DELUX M618XSD.app` to `/Applications`. It requires macOS 13 or later and is a
+universal app (Apple Silicon and Intel).
+
+The app is not notarized by Apple, so macOS blocks it the first time. Either go to
+**System Settings → Privacy & Security** and click **Open Anyway**, or run:
+
+```bash
+xattr -dr com.apple.quarantine "/Applications/DELUX M618XSD.app"
+```
+
+## Requirements (building from source)
 
 - macOS 13 or later.
 - Swift 5.10 or later (the Command Line Tools are enough: `xcode-select --install`).
