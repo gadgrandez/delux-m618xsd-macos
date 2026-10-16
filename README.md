@@ -1,95 +1,96 @@
-# DELUX M618XSD para macOS
+# DELUX M618XSD for macOS
 
-Driver no oficial para configurar el mouse **DELUX M618XSD** en macOS. DELUX solo publica
-su driver (DELUX Office Driver) para Windows; esta app replica sus funciones a partir del
-protocolo reconstruido de ese driver.
+Unofficial macOS app to configure the **DELUX M618XSD** mouse. DELUX only ships its driver
+(DELUX Office Driver) for Windows; this app reproduces its features from the protocol
+reverse-engineered from that driver.
 
-*Unofficial macOS configuration app for the DELUX M618XSD mouse (wired, 2.4 GHz receiver
-and Bluetooth LE). Contributions welcome.*
+## Features
 
-## Funciones
+- **DPI:** 8 stages (40–4800 DPI), per-stage color and active stage.
+- **Buttons:** the Windows driver's functions plus macOS (⌘) shortcuts per button.
+- **Lighting:** 12 modes, color, brightness, speed and turn-off-while-moving.
+- **Performance:** polling rate from 125 to 1000 Hz, debounce, light-off and sleep timers.
+- **Profiles:** multiple profiles, import from the Windows `pro.data` file, and JSON.
+- **Connection:** USB cable, 2.4 GHz receiver and Bluetooth LE; the app picks one automatically.
 
-- **DPI:** 8 niveles (40–4800 DPI), color de cada nivel y nivel activo.
-- **Botones:** las funciones del driver de Windows y atajos de macOS (⌘) por botón.
-- **Iluminación:** 12 modos, color, brillo, velocidad y apagado al mover.
-- **Rendimiento:** polling de 125 a 1000 Hz, debounce, apagado de luz y suspensión.
-- **Perfiles:** varios perfiles, importación del `pro.data` de Windows y JSON.
-- **Conexión:** cable USB, receptor 2.4G y Bluetooth LE; la app elige sola.
+Tested on the real mouse in all three modes. Over Bluetooth the mouse does not allow
+changing the polling rate. Macros are experimental and can only be edited as JSON.
 
-Probado en el mouse real en los tres modos. Por Bluetooth el mouse no permite cambiar el
-polling. Las macros son experimentales y solo se editan por JSON.
+The app's user interface is currently in Spanish.
 
-## Requisitos
+## Requirements
 
-- macOS 13 o posterior.
-- Swift 5.10 o posterior (basta con las Command Line Tools: `xcode-select --install`).
+- macOS 13 or later.
+- Swift 5.10 or later (the Command Line Tools are enough: `xcode-select --install`).
 
-## Compilar
+## Build
 
 ```bash
 cd DeluxDriver
 ./scripts/build-app.sh
 ```
 
-Genera `DeluxDriver/build/DELUX M618XSD.app` (firma ad hoc) y la herramienta de línea de
-comandos `DeluxDriver/build/deluxctl`. La primera vez que conectes por Bluetooth, macOS
-pedirá permiso de Bluetooth para la app.
+This produces `DeluxDriver/build/DELUX M618XSD.app` (ad hoc signed) and the command-line
+tool `DeluxDriver/build/deluxctl`. The first time you connect over Bluetooth, macOS will ask
+for Bluetooth permission for the app.
 
-## Uso
+## Usage
 
-Abre la app, ajusta el perfil y pulsa **Aplicar** (⌘↩). La configuración queda guardada
-en el mouse.
+Open the app, adjust the profile and click **Aplicar** (Apply, ⌘↩). The settings are stored
+on the mouse itself.
 
-Línea de comandos (cable o receptor):
-
-```bash
-deluxctl info                       # detecta el mouse
-deluxctl dump perfil.json           # muestra los paquetes sin enviarlos
-deluxctl apply perfil.json --yes    # envía el perfil
-deluxctl listen 30                  # muestra eventos (DPI, batería…)
-deluxctl import-windows pro.data    # importa un perfil de Windows
-```
-
-macOS solo permite Bluetooth a una app empaquetada; para aplicar por Bluetooth sin ventana:
+Command line (cable or receiver):
 
 ```bash
-open -W "DeluxDriver/build/DELUX M618XSD.app" --args --apply "$PWD/perfil.json" --log salida.txt
+deluxctl info                       # detect the mouse
+deluxctl dump profile.json          # print the packets without sending them
+deluxctl apply profile.json --yes   # send the profile
+deluxctl listen 30                  # print mouse events (DPI, battery…)
+deluxctl import-windows pro.data    # import a Windows profile
 ```
 
-## Pruebas
+macOS only grants Bluetooth access to a bundled app; to apply a profile over Bluetooth
+without opening a window:
+
+```bash
+open -W "DeluxDriver/build/DELUX M618XSD.app" --args --apply "$PWD/profile.json" --log output.txt
+```
+
+## Tests
 
 ```bash
 cd DeluxDriver
 swift run selftest
 ```
 
-## Estructura
+## Layout
 
-| Ruta | Contenido |
+| Path | Contents |
 |---|---|
-| `DeluxDriver/Sources/DeluxKit` | Protocolo, modelo de perfil, HID (IOKit) y Bluetooth (CoreBluetooth) |
-| `DeluxDriver/Sources/DeluxDriverApp` | App SwiftUI |
-| `DeluxDriver/Sources/deluxctl` | Herramienta de línea de comandos |
-| `DeluxDriver/Sources/selftest` | Pruebas |
-| `docs/PROTOCOLO.md` | Especificación del protocolo (HID y Bluetooth) |
-| `reference/windows-driver` | Perfil de fábrica exportado del driver de Windows (fixture de pruebas) |
+| `DeluxDriver/Sources/DeluxKit` | Protocol, profile model, HID (IOKit) and Bluetooth (CoreBluetooth) |
+| `DeluxDriver/Sources/DeluxDriverApp` | SwiftUI app |
+| `DeluxDriver/Sources/deluxctl` | Command-line tool |
+| `DeluxDriver/Sources/selftest` | Tests |
+| `docs/PROTOCOL.md` | Protocol specification (HID and Bluetooth) |
+| `reference/windows-driver` | Factory profile exported from the Windows driver (test fixture) |
 
-## Contribuir
+## Contributing
 
-Se aceptan issues y pull requests. Pendientes conocidos:
+Issues and pull requests are welcome. Known open items:
 
-- Editor de macros en la app y verificación de los campos de modo/repetición.
-- Lectura de la configuración actual del mouse (el driver de Windows no la lee).
-- Soporte de otros modelos DELUX con el mismo protocolo.
+- Macro editor in the app, and confirming the meaning of the mode/repeat fields.
+- English localization of the user interface.
+- Reading the mouse's current settings (the Windows driver never reads them).
+- Support for other DELUX models that use the same protocol.
 
-Antes de enviar un cambio, ejecuta `swift run selftest`. Si tocas el protocolo, prueba en
-el mouse real y actualiza `docs/PROTOCOLO.md`.
+Before submitting a change, run `swift run selftest`. If you change the protocol, test on a
+real mouse and update `docs/PROTOCOL.md`.
 
-## Aviso
+## Disclaimer
 
-Proyecto independiente, sin relación con DELUX. Se distribuye sin garantía; úsalo bajo tu
-propio riesgo. No incluye software de DELUX.
+Independent project, not affiliated with DELUX. Provided without warranty; use at your own
+risk. No DELUX software is included.
 
-## Licencia
+## License
 
 [MIT](LICENSE)

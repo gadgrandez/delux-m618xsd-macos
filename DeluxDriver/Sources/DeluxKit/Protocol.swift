@@ -1,7 +1,7 @@
 import Foundation
 
 /// Codificación de los feature reports del M618XSD (modelo `ms_4` de DELUX Office Driver).
-/// Cada función reproduce la rutina equivalente de `Mouse.exe`; ver `docs/PROTOCOLO.md`.
+/// Cada función reproduce la rutina equivalente de `Mouse.exe`; ver `docs/PROTOCOL.md`.
 public enum Protocol {
     public static let vendorID = 0x1d57
     public static let wiredProductID = 0xfa28
