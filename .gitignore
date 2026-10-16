@@ -1,0 +1,12 @@
+# Compilación
+.build/
+DeluxDriver/.build/
+DeluxDriver/build/
+*.xcodeproj/
+.swiftpm/
+.DS_Store
+
+# Driver original de Windows (software de DELUX, no se redistribuye)
+*.zip
+reference/windows-driver/lan.xml
+.codegraph/

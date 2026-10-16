@@ -1,0 +1,187 @@
+{
+  "activeStage" : 3,
+  "buttons" : [
+    {
+      "function" : {
+        "_0" : 1
+      }
+    },
+    {
+      "function" : {
+        "_0" : 2
+      }
+    },
+    {
+      "function" : {
+        "_0" : 4
+      }
+    },
+    {
+      "function" : {
+        "_0" : 5
+      }
+    },
+    {
+      "function" : {
+        "_0" : 3
+      }
+    },
+    {
+      "function" : {
+        "_0" : 6
+      }
+    },
+    {
+      "function" : {
+        "_0" : 0
+      }
+    },
+    {
+      "function" : {
+        "_0" : 0
+      }
+    },
+    {
+      "function" : {
+        "_0" : 0
+      }
+    },
+    {
+      "function" : {
+        "_0" : 0
+      }
+    },
+    {
+      "function" : {
+        "_0" : 0
+      }
+    },
+    {
+      "function" : {
+        "_0" : 0
+      }
+    },
+    {
+      "function" : {
+        "_0" : 0
+      }
+    },
+    {
+      "function" : {
+        "_0" : 0
+      }
+    },
+    {
+      "function" : {
+        "_0" : 13
+      }
+    },
+    {
+      "function" : {
+        "_0" : 14
+      }
+    },
+    {
+      "function" : {
+        "_0" : 11
+      }
+    },
+    {
+      "function" : {
+        "_0" : 12
+      }
+    }
+  ],
+  "debounce" : 1,
+  "dpiStages" : [
+    {
+      "color" : {
+        "b" : 0,
+        "g" : 0,
+        "r" : 255
+      },
+      "dpi" : 800,
+      "enabled" : true
+    },
+    {
+      "color" : {
+        "b" : 0,
+        "g" : 255,
+        "r" : 0
+      },
+      "dpi" : 1200,
+      "enabled" : true
+    },
+    {
+      "color" : {
+        "b" : 255,
+        "g" : 0,
+        "r" : 0
+      },
+      "dpi" : 1800,
+      "enabled" : true
+    },
+    {
+      "color" : {
+        "b" : 255,
+        "g" : 0,
+        "r" : 255
+      },
+      "dpi" : 2400,
+      "enabled" : true
+    },
+    {
+      "color" : {
+        "b" : 0,
+        "g" : 255,
+        "r" : 255
+      },
+      "dpi" : 4000,
+      "enabled" : true
+    },
+    {
+      "color" : {
+        "b" : 255,
+        "g" : 0,
+        "r" : 255
+      },
+      "dpi" : 0,
+      "enabled" : false
+    },
+    {
+      "color" : {
+        "b" : 0,
+        "g" : 64,
+        "r" : 255
+      },
+      "dpi" : 0,
+      "enabled" : false
+    },
+    {
+      "color" : {
+        "b" : 255,
+        "g" : 255,
+        "r" : 255
+      },
+      "dpi" : 0,
+      "enabled" : false
+    }
+  ],
+  "lighting" : {
+    "brightness" : 8,
+    "color" : {
+      "b" : 255,
+      "g" : 0,
+      "r" : 0
+    },
+    "mode" : 0,
+    "offWhileMoving" : false,
+    "speed" : 6
+  },
+  "name" : "Profile1",
+  "pollingRate" : 1000,
+  "power" : {
+    "lightOffMinutes" : 1,
+    "sleepMinutes" : 10
+  }
+}
